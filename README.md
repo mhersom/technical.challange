@@ -1,2 +1,2 @@
-# technical.challange
+# technical.challenge
 SRE Technical Challenge
