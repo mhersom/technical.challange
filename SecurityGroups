@@ -1,0 +1,83 @@
+#Automatic Load Balancer Security Group
+
+resource "aws_security_group" "lb" {
+  name        = "lb_sg"
+  description = "Allow inbound HTTP and HTTPS traffic from the internet and outbound to EC2 instances"
+  vpc_id      = aws_vpc.main.id
+
+  # Inbound Rules
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow HTTP traffic from anywhere"
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow HTTPS traffic from anywhere"
+  }
+
+  # Outbound Rules
+  egress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    security_groups = [aws_security_group.ec2.id] # Reference the EC2 security group
+    description = "Allow HTTP traffic to EC2 instances"
+  }
+
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    security_groups = [aws_security_group.ec2.id] # Reference the EC2 security group
+    description = "Allow HTTPS traffic to EC2 instances"
+  }
+}
+
+# Create EC2 Security Group
+
+resource "aws_security_group" "ec2" {
+  name        = "ec2_sg"
+  description = "Allow inbound HTTP and HTTPS traffic from the load balancer, and SSH from a specific IP"
+  vpc_id      = aws_vpc.main.id
+
+  # Inbound Rules
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    security_groups = [aws_security_group.lb.id] # Reference the load balancer security group
+    description = "Allow HTTP traffic from the load balancer"
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    security_groups = [aws_security_group.lb.id] # Reference the load balancer security group
+    description = "Allow HTTPS traffic from the load balancer"
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["INPUT IP ADDRESS HERE"] # Replace with your actual IP or CIDR range
+    description = "Allow SSH access from office IP"
+  }
+
+  # Outbound Rules
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
+  }
+}
