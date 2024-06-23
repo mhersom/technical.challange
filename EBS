@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Ensure the file system is not currently being used
+sync
+
+# Resize the partition and file system on /dev/xvda1
+echo "Resizing the partition and file system..."
+sudo growpart /dev/xvda 1
+sudo resize2fs /dev/xvda1
+
+echo "File system resize completed."
